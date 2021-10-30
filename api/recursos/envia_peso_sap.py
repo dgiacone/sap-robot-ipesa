@@ -36,7 +36,7 @@ class enviaPesoPallet(Resource):
             url = os.environ['URL']+"ZGW_ROBOT_SRV/I2_REGISTRO_PESOSet"
 
             headers = {
-                    'sap-client': '110',
+                    'sap-client': os.environ['SAP-CLIENT'],
                     'Authorization': 'Basic SU5URVJGQVo6SXBlc2EyMDIxKg==',
                     'x-csrf-token': token,  
                     'Content-Type': 'application/json',

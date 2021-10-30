@@ -10,10 +10,12 @@ from api.recursos.agrega_caja_pallet_sap import agregaCajaPallet
 from api.recursos.busca_datos_caja_sap import buscaDatosCajaPallet
 from api.recursos.envia_peso_sap import enviaPesoPallet
 from api.recursos.cierra_pallet_sap import cierraPallet
+from api.recursos.healt import healt
 
 api = Api(app)
 api.add_resource(abrePalletSap, "/abre/pallet/<caja>")
 api.add_resource(agregaCajaPallet, "/agrega/caja/pallet/<caja>/<pallet>")
-api.add_resource(buscaDatosCajaPallet, "/busca/datos/caja/<etiqueta>")
+api.add_resource(buscaDatosCajaPallet, "/busca/datos/caja/<etiqueta>/<peso>")
 api.add_resource(enviaPesoPallet, "/envia/peso/<caja>/<peso>")
 api.add_resource(cierraPallet, "/cierra/pallet/<pallet>")
+api.add_resource(healt, "/healt")

@@ -2,11 +2,18 @@ from flask_restful import Resource, reqparse
 import json, traceback, base64, requests
 from .conf import *
 from .solicita_token import solicitaToken
+from .logger import log	
+from datetime import datetime
 
 
 class cierraPallet(Resource):
     def post(self, pallet):
-                
+        # Calculo la fecha y la hora dd/mm/YY H:M:S
+        now = datetime.now()
+        fecha_hora = now.strftime("%d/%m/%Y %H:%M:%S")
+        
+        # Este valor se utiliza para los mensajes de error
+        etapa="Cierra Pallet"
         payload={
                     "d" : {
                         "Pallet" : pallet,
@@ -21,9 +28,10 @@ class cierraPallet(Resource):
         
        
         headers = {
-            'sap-client': '110',
-            'Authorization': 'Basic SU5URVJGQVo6SXBlc2EyMDIxKg==',
+            'sap-client': os.environ['SAP-CLIENT'],
+            'Authorization':  os.environ['CLAVE'],
             'x-csrf-token': 'Fetch',
+            'Cache-Control': 'no-cache'
         }
 
         solicita=solicitaToken()
@@ -38,18 +46,19 @@ class cierraPallet(Resource):
             
 
             headers = {
-                    'sap-client': '110',
-                    'Authorization': 'Basic SU5URVJGQVo6SXBlc2EyMDIxKg==',
+                    'sap-client': os.environ['SAP-CLIENT'],
+                    'Authorization':  os.environ['CLAVE'],
                     'x-csrf-token': token,  
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'Cookie':coockie_str
+                    'Cookie':coockie_str,
+                    'Cache-Control': 'no-cache'
                 }
-            
+            log(url, "CERRAR PALLET")
             response = requests.request("POST", url, headers=headers, data=payload, verify=False)
-          
+            log(response.text, "CERRAR PALLET")
             if response.status_code == 201:
-                    print("mensaje recibido")
+                    
                     
                     respuesta=response.json()
                     msg=respuesta['d']['I5CierrePallet_To_MensajesNav']['results'][0]
@@ -62,9 +71,31 @@ class cierraPallet(Resource):
                     resultado['id']=msg['Id']
                     resultado['message']=msg['Message']
                     resultado['messageV1']=msg['MessageV1']
+                    if msg['Type']!='S':
+                        resultado['tipo']="ERROR"
+                        resultado['status']="key [{}] {}".format(msg['Key'] ,msg['Message'] )
+                        resultado['fecha_hora']=fecha_hora
+                        resultado['etapa']=etapa
+                    else:
+                        resultado['tipo']="OK"
+                        resultado['status']="  Pallet {} abierto correctamente".format(msg['Number'])
+                        resultado['fecha_hora']=fecha_hora
+                        resultado['etapa']=etapa
+                    log(resultado, "CERRAR PALLET")
                     return resultado,200
             else:
-                    print("Error en cierre de pallet")
+                    resultado={}
+                    resultado['tipo']="ERROR"
+                    resultado['status']="Error al cerrar el pallet"
+                    resultado['fecha_hora']=fecha_hora
+                    resultado['etapa']=etapa
+                    log(resultado, "CERRAR PALLET")
                     return {"msg":response.text}, 400
         else:
+            resultado={}
+            resultado['tipo']="ERROR"
+            resultado['status']="No se puede obtener el token de seguridad"
+            resultado['fecha_hora']=fecha_hora
+            resultado['etapa']=etapa
+            log(resultado, "CERRAR PALLET")
             return {"msg":"No se puede obtener el token de seguridad"},400

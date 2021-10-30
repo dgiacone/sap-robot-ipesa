@@ -1,5 +1,6 @@
 import requests, os
 from .conf import *
+from .logger import log
 
 def solicitaToken():   
         
@@ -14,30 +15,40 @@ def solicitaToken():
        
         payload={}
         headers = {
-            'sap-client': '110',
-            'Authorization': 'Basic SU5URVJGQVo6SXBlc2EyMDIxKg==',
+            'sap-client': os.environ['SAP-CLIENT'],
+            'Authorization': os.environ['CLAVE'],
             'x-csrf-token': 'Fetch',
+            'Cache-Control': 'no-cache'
         }
-
+        log(url, "SOLICITA TOKEN")
         response = requests.request("GET", url, headers=headers, data=payload, verify=False)
+        log(response.text, "SOLICITA TOKEN")
         
-        a=response.cookies
-        b=list(a)
-        cookie=b[1].value
-        token=response.headers['x-csrf-token']
-        coockie_str='sap-usercontext=sap-client=110; SAP_SESSIONID_DEV_110={}'.format(cookie)
+        if response.status_code==200:
+            centro=os.environ['SAP-CLIENT']
+            a=response.cookies
+          
+            b=list(a)
+             
+          
+         
+            cookie=b[0].value
+            token=response.headers['x-csrf-token']
+            coockie_str='sap-usercontext=sap-client={}; SAP_SESSIONID_DEV_{}={}'.format(centro,centro,cookie)
         
-        if response.status_code == 200:
-            msg={
-                "status":1,
-                "token":token,
-                "coockie":coockie_str
-            }
+            if response.status_code == 200:
+                msg={
+                    "status":1,
+                    "token":token,
+                    "coockie":coockie_str
+                }
+            else:
+                msg={
+                    "status":0,
+                    "token":"",
+                    "coockie":""
+                }
         else:
-             msg={
-                "status":0,
-                "token":"",
-                "coockie":""
-            }
-            
+            msg="error"
+        log(msg, "SOLICITA TOKEN")
         return msg
